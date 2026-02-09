@@ -1,0 +1,63 @@
+#include <tunables/global>
+
+profile squid_proxy flags=(attach_disconnected) {
+  #include <abstractions/base>
+  #include <abstractions/bash>
+  #include <abstractions/nameservice>
+  #include <abstractions/python>
+  #include <abstractions/ssl_certs>
+
+  # -------------------------------------------------------------------------
+  # Core Permissions (Base + Restrictions)
+  # -------------------------------------------------------------------------
+  file,  # Allow filesystem access by default, restrict dangerous below
+  
+  # Network (Allow standard, block dangerous)
+  network inet tcp,
+  network inet udp,
+  network inet6 tcp,
+  network inet6 udp,
+
+  # -------------------------------------------------------------------------
+  # S6-Overlay & Service Capabilities
+  # -------------------------------------------------------------------------
+  # S6 needs these to manage services/users/resources
+  capability chown,
+  capability dac_override,
+  capability fowner,
+  capability fsetid,
+  capability kill,
+  capability net_bind_service,
+  capability setgid,
+  capability setuid,
+  capability sys_admin,
+  capability sys_resource,
+  
+  # Security: Deny extremely dangerous capabilities
+  deny capability sys_module,  # No kernel modules
+  deny capability sys_ptrace,  # No process spying
+  deny capability sys_boot,    # No reboots
+  deny capability setpcap,     # No capability changes
+
+  # -------------------------------------------------------------------------
+  # Filesystem Hardening (Denylist)
+  # -------------------------------------------------------------------------
+  
+  # Protect Kernel/System
+  deny @{PROC}/sysrq-trigger rwklx,
+  deny @{PROC}/kcore rwklx,
+  deny @{PROC}/mem rwklx,
+  deny @{PROC}/kmem rwklx,
+  deny /sys/firmware/** rwklx,
+  deny /sys/kernel/security/** rwklx,
+  
+  # Protect Firmware/Hardware (Home Assistant specific)
+  deny /dev/mem rwklx,
+  deny /dev/kmem rwklx,
+  deny /dev/port rwklx,
+
+  # Mount Restrictions
+  deny mount,
+  deny umount,
+  deny pivot_root,
+}

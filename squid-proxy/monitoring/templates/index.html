@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Squid Proxy Monitor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #03a9f4;
+            --secure-color: #4caf50;
+            --primary-text-color: #212121;
+            --secondary-text-color: #727272;
+            --card-background-color: #ffffff;
+            --scaffold-background-color: #fafafa;
+            --divider-color: #e0e0e0;
+            --shadow-elevation: 0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 1px 3px 0px rgba(0, 0, 0, 0.12);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #2196f3;
+                --secure-color: #66bb6a;
+                --primary-text-color: #e1e1e1;
+                --secondary-text-color: #9b9b9b;
+                --card-background-color: #1c1c1c;
+                --scaffold-background-color: #111111;
+                --divider-color: #2f2f2f;
+            }
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--scaffold-background-color);
+            color: var(--primary-text-color);
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .view {
+            width: 100%;
+            max-width: 800px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .ha-card {
+            background: var(--card-background-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-elevation);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            width: 100%;
+            font-size: 1.1em;
+            font-weight: 500;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header svg {
+            fill: var(--secondary-text-color);
+            width: 24px;
+            height: 24px;
+        }
+
+        .state-value {
+            font-size: 2.5em;
+            font-weight: 400;
+            margin-bottom: 4px;
+        }
+
+        .state-uom {
+            font-size: 1em;
+            color: var(--secondary-text-color);
+            margin-left: 4px;
+        }
+
+        .footer-graph {
+            width: 100%;
+            height: 4px;
+            background: var(--divider-color);
+            margin-top: 16px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+            background: var(--primary-color);
+            width: 0%;
+            transition: width 1s ease;
+        }
+
+        .client-section-title {
+            width: 100%;
+            font-size: 0.9em;
+            color: var(--primary-color);
+            font-weight: 500;
+            margin-top: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+        }
+
+        li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--divider-color);
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+        }
+
+        .tag {
+            font-size: 0.8em;
+            color: var(--secondary-text-color);
+            background: rgba(0, 0, 0, 0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="width: 100%; max-width: 800px;">
+        <header style="text-align: center; margin-bottom: 32px;">
+            <h1 style="margin: 8px 0 4px 0; font-weight: 400;">Squid Proxy Monitor</h1>
+            <p style="margin: 0; color: var(--secondary-text-color);">Real-time connection metrics</p>
+        </header>
+
+        <div class="view">
+            <!-- Total Connections -->
+            <div class="ha-card">
+                <div class="header">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12,2C15.31,2 18,4.66 18,8C18,10.1 16.96,11.97 15.38,13.04L19,16.27V22H5V16.27L8.62,13.04C7.04,11.97 6,10.1 6,8C6,4.66 8.69,2 12,2M12,4A4,4 0 0,0 8,8A4,4 0 0,0 12,12A4,4 0 0,0 16,8A4,4 0 0,0 12,4Z" />
+                    </svg>
+                    <span>Total Connections</span>
+                </div>
+                <div style="display:flex; align-items:baseline;">
+                    <span class="state-value" id="val-total">-</span>
+                    <span class="state-uom">active</span>
+                </div>
+                <div class="footer-graph">
+                    <div class="bar" id="bar-total"></div>
+                </div>
+            </div>
+
+            <!-- Memory -->
+            <div class="ha-card">
+                <div class="header">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M2,7H4.5V17H3V8.5H2V7M22,7V8.5H21V17H19.5V7H22M15,9A2,2 0 0,1 17,11V15A2,2 0 0,1 15,17H9A2,2 0 0,1 7,15V11A2,2 0 0,1 9,9H15M15,13V11H9V13H15M15,14H9V15H15V14Z" />
+                    </svg>
+                    <span>Memory Usage</span>
+                </div>
+                <div style="display:flex; align-items:baseline;">
+                    <span class="state-value" id="val-mem">-</span>
+                    <span class="state-uom">MB</span>
+                </div>
+                <div class="footer-graph">
+                    <div class="bar" id="bar-mem" style="background:#ff9800"></div>
+                </div>
+            </div>
+
+            <!-- Uptime -->
+            <div class="ha-card">
+                <div class="header">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z" />
+                    </svg>
+                    <span>Process Uptime</span>
+                </div>
+                <span class="state-value" id="val-uptime" style="font-size: 1.8em;">-</span>
+                <div class="footer-graph" style="background:transparent;"></div>
+            </div>
+
+            <!-- Cache Efficiency -->
+            <div class="ha-card">
+                <div class="header">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M21,11C21,16.55 17.16,21.74 12,23C6.84,21.74 3,16.55 3,11V5L12,1L21,5V11M12,21C15.75,20 19,15.54 19,11.22V6.3L12,3.18L5,6.3V11.22C5,15.54 8.25,20 12,21M11,7H13V9H11V7M11,11H13V17H11V11Z" />
+                    </svg>
+                    <span>Cache Efficiency</span>
+                </div>
+                <div style="display:flex; align-items:baseline;">
+                    <span class="state-value" id="val-hit-ratio">-</span>
+                    <span class="state-uom">%</span>
+                </div>
+                <div class="footer-graph">
+                    <div class="bar" id="bar-hit-ratio" style="background:#8bc34a"></div>
+                </div>
+                <div style="font-size: 0.8em; color: var(--secondary-text-color); margin-top: 8px;">
+                    <span id="val-hits">0</span> Hits / <span id="val-misses">0</span> Missess
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="ha-card" style="grid-column: 1 / -1; align-items: stretch;">
+                <div class="header">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M16,11.78L20.24,4.45L21.97,5.45L16.74,14.5L10.23,10.75L5.46,19H22V21H2V3H4V17.54L9.5,8L16,11.78Z" />
+                    </svg>
+                    <span>Active Connections by Protocol</span>
+                </div>
+                <div style="height: 250px; width: 100%;">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Clients -->
+            <div class="ha-card" style="grid-column: 1 / -1; align-items: flex-start;">
+                <div class="header">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12,11A3,3 0 0,1 15,14A3,3 0 0,1 12,17A3,3 0 0,1 9,14A3,3 0 0,1 12,11M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12,9A5,5 0 0,0 7,14A5,5 0 0,0 12,19A5,5 0 0,0 17,14A5,5 0 0,0 12,9Z" />
+                    </svg>
+                    <span>Connected Source IPs</span>
+                </div>
+                <div style="width: 100%; max-height: 200px; overflow-y: auto;">
+                    <div class="client-section-title">HTTP (3128)</div>
+                    <ul id="list-http"></ul>
+                    <div class="client-section-title">HTTPS (3129)</div>
+                    <ul id="list-https"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chart = null;
+
+        function initChart() {
+            const ctx = document.getElementById('trafficChart').getContext('2d');
+            const blue = '#03a9f4';
+            const green = '#4caf50';
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'HTTP (3128)', data: [], borderColor: blue, backgroundColor: blue + '20', fill: true, tension: 0.4, pointRadius: 0 },
+                        { label: 'HTTPS (3129)', data: [], borderColor: green, backgroundColor: green + '20', fill: true, tension: 0.4, pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, animation: false,
+                    scales: { x: { display: false }, y: { beginAtZero: true, ticks: { precision: 0 } } },
+                    plugins: { legend: { position: 'top', align: 'end' } }
+                }
+            });
+        }
+
+        function formatUptime(s) {
+            if (!s) return '0h 0m';
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            return h > 24 ? `${Math.floor(h / 24)}d ${h % 24}h` : `${h}h ${m}m`;
+        }
+
+        function renderList(id, items) {
+            const el = document.getElementById(id);
+            if (!items || items.length === 0) {
+                el.innerHTML = '<li style="color:var(--secondary-text-color); font-style:italic">None</li>';
+                return;
+            }
+            el.innerHTML = items.map(ip => `<li><span>${ip}</span><span class="tag">Active</span></li>`).join('');
+        }
+
+        async function update() {
+            try {
+                const res = await fetch('api/stats');
+                const d = await res.json();
+
+                // Cards
+                document.getElementById('val-total').innerText = d.total_connections ?? 0;
+                document.getElementById('val-mem').innerText = d.memory_mb ?? 0;
+                document.getElementById('val-uptime').innerText = formatUptime(d.uptime);
+
+                // Bars
+                document.getElementById('bar-total').style.width = Math.min((d.total_connections / 50) * 100, 100) + '%';
+                document.getElementById('bar-mem').style.width = Math.min((d.memory_mb / 512) * 100, 100) + '%';
+
+                // Lists
+                renderList('list-http', d.http_clients);
+                renderList('list-https', d.https_clients);
+
+                // Cache Stats
+                if (d.squid) {
+                    const ratio = d.squid.byte_hit_ratio ?? 0;
+                    document.getElementById('val-hit-ratio').innerText = ratio;
+                    document.getElementById('bar-hit-ratio').style.width = Math.min(ratio, 100) + '%';
+                    document.getElementById('val-hits').innerText = d.squid.cache_hits ?? 0;
+                    document.getElementById('val-misses').innerText = d.squid.cache_misses ?? 0;
+                }
+
+                // Chart
+                if (!chart) initChart();
+                const now = new Date().toLocaleTimeString();
+                chart.data.labels.push(now);
+                chart.data.datasets[0].data.push(d.http_connections ?? 0);
+                chart.data.datasets[1].data.push(d.https_connections ?? 0);
+                if (chart.data.labels.length > 60) {
+                    chart.data.labels.shift();
+                    chart.data.datasets[0].data.shift();
+                    chart.data.datasets[1].data.shift();
+                }
+                chart.update();
+            } catch (e) { console.error(e); }
+        }
+
+        setInterval(update, 2000);
+        update();
+    </script>
+</body>
+
+</html>

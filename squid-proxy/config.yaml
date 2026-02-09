@@ -1,0 +1,72 @@
+name: "Squid Proxy"
+version: "1.0.3"
+slug: "squid_proxy"
+description: "High-performance forward proxy with HTTPS-to-HTTPS (Secure Proxy) support and TLS-stealth"
+url: "https://github.com/Nwus9XWK5UTy/homeassistant"
+maintainer: "Nwus9XWK5UTy"
+stage: stable
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:arrow-decision-outline
+map:
+  - data
+host_network: false
+host_ipc: false
+host_dbus: false
+host_pid: false
+apparmor: true
+gpio: false
+usb: false
+uart: false
+video: false
+audio: false
+kernel_modules: false
+stdin: false
+legacy: false
+arch:
+  - aarch64
+  - armhf
+  - armv7
+  - amd64
+startup: "services"
+boot: "auto"
+init: false
+ports:
+  3128/tcp: 3128
+  3129/tcp: 3129
+  80/tcp: 80
+tmpfs: true
+options:
+  debug: false
+  enable_http: true
+  enable_https: false
+  use_letsencrypt: false
+  letsencrypt_email: ""
+  proxy_user: "squidadmin"
+  proxy_password: ""
+  proxy_domain: "homeassistant.local"
+  allow_all: true
+  allowed_networks:
+    - 192.168.0.0/16
+    - 172.16.0.0/12
+    - 10.0.0.0/8  
+  cache_enabled: false
+  cache_disk_size_mb: 512
+  cache_max_object_size_mb: 10
+  cache_mem_size_mb: 64
+schema:
+  enable_http: bool
+  enable_https: bool
+  use_letsencrypt: bool
+  letsencrypt_email: str?
+  proxy_user: "match(^[a-zA-Z0-9_-]{8,32}$)"
+  proxy_password: "match(^.{8,64}$)"
+  proxy_domain: str
+  allow_all: bool
+  allowed_networks:
+    - str
+  debug: bool
+  cache_enabled: bool
+  cache_disk_size_mb: int
+  cache_max_object_size_mb: int
+  cache_mem_size_mb: int

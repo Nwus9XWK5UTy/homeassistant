@@ -1,0 +1,47 @@
+configuration:
+  enable_http:
+    name: "Enable HTTP Proxy"
+    description: "Launch the proxy on port 3128 using plain HTTP (Standard Proxy)."
+  enable_https:
+    name: "Enable HTTPS Proxy"
+    description: "Launch the proxy on port 3129 with SSL encryption (Secure Proxy). Requires a valid Proxy Domain."
+  use_letsencrypt:
+    name: "Use Let's Encrypt"
+    description: "Try to generate/renew a real SSL certificate from Let's Encrypt. Requires port 80 to be open and the Proxy Domain to point to this IP."
+  letsencrypt_email:
+    name: "Registration Email"
+    description: "Email address for Let's Encrypt registration and expiry notifications."
+  allowed_networks:
+    name: "Allowed Networks"
+    description: "List of IP ranges (CIDR) allowed to use the proxy if 'Allow All' is disabled."
+  proxy_user:
+    name: "Proxy Username"
+    description: "The username required for authentication (8-32 characters, alphanumeric, including _ or -)."
+  proxy_password:
+    name: "Proxy Password"
+    description: "The password required for authentication (Minimum 8 characters)."
+  proxy_domain:
+    name: "Proxy Domain (FQDN)"
+    description: "The external domain name used for SSL certificate generation (Required for HTTPS Proxy)."
+  allow_all:
+    name: "Allow All IPs"
+    description: "If enabled, anyone can connect from the internet (must still authenticate). Recommended for external use."
+  debug:
+    name: "Debug Logging"
+    description: "Enable verbose access and system logs. Keep disabled to save Home Assistant disk space and performance."
+  cache_enabled:
+    name: "Enable Caching"
+    description: "Turn on the caching engine (HTTP ONLY). Does not affect HTTPS. Disabled by default."
+  cache_mem_size_mb:
+    name: "Memory Cache Size (MB)"
+    description: "Amount of RAM reserved for hot objects."
+  cache_disk_size_mb:
+    name: "Disk Cache Size (MB)"
+    description: "Amount of volatile disk space (/tmp) to use. Cleared on restart."
+  cache_max_object_size_mb:
+    name: "Max Object Size (MB)"
+    description: "Maximum size of a single file to cache."
+network:
+  3128/tcp: "Port for standard unencrypted proxy traffic (HTTP)."
+  3129/tcp: "Port for encrypted Secure Proxy traffic (HTTPS)."
+  80/tcp: "Port for Let's Encrypt HTTP-01 challenge validation."
