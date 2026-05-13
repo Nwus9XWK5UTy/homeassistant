@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.4
+- **Feature**: Added background monitor for automated Let's Encrypt renewal with zero-downtime configuration reloads.
+- **Improved**: Added multi-architecture support for amd64, aarch64, armhf, and armv7.
+- **Security**: Implemented dynamic port security; port 80 is now restricted to only when HTTP proxying or Let's Encrypt is enabled.
+
 ## 1.0.3
 - **Schema**: Adjusted configuration schema order for better logical grouping of network settings.
 
