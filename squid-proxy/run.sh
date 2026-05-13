@@ -38,10 +38,10 @@ if [ "$ENABLE_HTTPS" = "true" ]; then
                 if [ "$DEBUG_MODE" = "true" ]; then
                     CB_LOG_OPTS="--verbose"
                 fi
-                CB_OPTS="--config-dir /data/letsencrypt --work-dir /data/letsencrypt/work --logs-dir /data/letsencrypt/logs ${CB_LOG_OPTS} --no-random-sleep-on-renew --non-interactive"
+                CB_OPTS="--config-dir /data/letsencrypt --work-dir /data/letsencrypt/work --logs-dir /data/letsencrypt/logs --no-random-sleep-on-renew --non-interactive"
                 
                 bashio::log.info "Checking for existing certificates for ${PROXY_DOMAIN}..."
-                # Discover existing certs
+                # Discover existing certs (Discovery MUST NOT be quiet or it returns nothing)
                 certbot certificates ${CB_OPTS} > /tmp/certs.txt 2>/dev/null || true
                 FOUND_PATH=$(grep -A 12 "Certificate Name: ${PROXY_DOMAIN}" /tmp/certs.txt 2>/dev/null | grep "Certificate Path:" | sed 's/.*Certificate Path: //' | xargs || true)
                 
@@ -53,7 +53,7 @@ if [ "$ENABLE_HTTPS" = "true" ]; then
                     bashio::log.info "Certificate not found or invalid. Requesting initial certificate..."
                     # We keep this blocking as we need a cert to start the HTTPS listener
                     certbot certonly --standalone \
-                        ${CB_OPTS} \
+                        ${CB_OPTS} ${CB_LOG_OPTS} \
                         --agree-tos --email "${LE_EMAIL}" \
                         -d "${PROXY_DOMAIN}" \
                         --preferred-challenges http \
@@ -308,7 +308,7 @@ if [ "$USE_LETSENCRYPT" = "true" ]; then
         while true; do
             bashio::log.info "Running scheduled certificate renewal check..."
             # Renew if needed and reload Squid if a new cert is deployed
-            if certbot renew ${CB_OPTS} \
+            if certbot renew ${CB_OPTS} ${CB_LOG_OPTS} \
                 --preferred-challenges http \
                 --deploy-hook "echo 'Certificates updated. Reloading Squid...'; squid -k reconfigure -f /tmp/squid.conf"; then
                 bashio::log.info "Certificate renewal check completed successfully."

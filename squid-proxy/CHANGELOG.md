@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.2
+- **Fix**: Resolved issue where certificate discovery failed when debug mode was disabled due to suppressed output.
+
 ## 1.1.1
 - **Fix**: Restored missing `DEBUG_MODE` variable initialization to resolve startup crash.
 
