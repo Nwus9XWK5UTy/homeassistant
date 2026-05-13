@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.6
+- **Fix**: Resolved permission issue where Squid could not read Let's Encrypt certificates.
+- **Improved**: Enhanced logging for certificate renewals; errors are no longer suppressed.
+
 ## 1.0.5
 - **Fix**: Resolved issue where expired certificates were not refreshed at startup.
 - **Fix**: Reordered renewal monitor loop to perform an immediate check upon startup.

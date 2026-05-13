@@ -36,26 +36,26 @@ if [ "$ENABLE_HTTPS" = "true" ]; then
                 CB_OPTS="--config-dir /data/letsencrypt --work-dir /data/letsencrypt/work --logs-dir /data/letsencrypt/logs"
                 
                 bashio::log.info "Checking for existing certificates for ${PROXY_DOMAIN}..."
-                # Dynamic discovery: Find the actual path (handles -0001 suffixes). 
-                # We add '|| true' inside the subshell to prevent exit on no match.
+                # Discover existing certs
                 certbot certificates ${CB_OPTS} > /tmp/certs.txt 2>/dev/null || true
                 FOUND_PATH=$(grep -A 12 "Certificate Name: ${PROXY_DOMAIN}" /tmp/certs.txt 2>/dev/null | grep "Certificate Path:" | sed 's/.*Certificate Path: //' | xargs || true)
                 
                 if [ -n "$FOUND_PATH" ] && [ -r "$FOUND_PATH" ]; then
                     bashio::log.info "Found existing Let's Encrypt certificate. Ensuring it is up to date..."
-                    # Try to renew before starting (handles cases where add-on was off for a long time)
-                    certbot renew ${CB_OPTS} --non-interactive --quiet --preferred-challenges http || true
+                    # Try to renew before starting. We remove --quiet to see errors if it fails.
+                    certbot renew ${CB_OPTS} --non-interactive --preferred-challenges http || bashio::log.warning "Renewal check failed. Continuing with existing certs."
                     
                     LE_CERT_FILE="$FOUND_PATH"
                     LE_KEY_FILE=$(dirname "$FOUND_PATH")/privkey.pem
                 else
-                    bashio::log.info "Certificate not found. Requesting from Let's Encrypt..."
+                    bashio::log.info "Certificate not found or invalid. Requesting from Let's Encrypt..."
+                    # We removed --quiet to allow the user to see WHY the request fails (e.g. port 80 blocked)
                     certbot certonly --standalone \
                         ${CB_OPTS} \
                         --non-interactive --agree-tos --email "${LE_EMAIL}" \
                         -d "${PROXY_DOMAIN}" \
                         --preferred-challenges http \
-                        --keep-until-expiring || bashio::log.warning "Certbot request failed."
+                        --keep-until-expiring || bashio::log.error "Certbot request failed! Check that Port 80 is forwarded and your domain is correct."
                     
                     # Re-discover after attempt
                     certbot certificates ${CB_OPTS} > /tmp/certs.txt 2>/dev/null || true
@@ -68,10 +68,17 @@ if [ "$ENABLE_HTTPS" = "true" ]; then
                 # Final check and link
                 if [ -n "$LE_CERT_FILE" ] && [ -r "$LE_CERT_FILE" ]; then
                     bashio::log.info "Success: Linking Let's Encrypt certs to Squid..."
+                    
+                    # CRITICAL: Fix permissions so the 'squid' user can read the certificates.
+                    # Certbot's 'archive' and 'live' directories are usually 700.
+                    bashio::log.info "Adjusting certificate permissions for Squid..."
+                    chgrp -R squid /data/letsencrypt
+                    chmod -R g+rX /data/letsencrypt
+                    
                     ln -sf "${LE_CERT_FILE}" "${SQUID_CERT}"
                     ln -sf "${LE_KEY_FILE}" "${SQUID_KEY}"
                 else
-                    bashio::log.warning "Let's Encrypt setup failed. Falling back to self-signed."
+                    bashio::log.error "Let's Encrypt setup failed. Falling back to self-signed."
                     USE_LETSENCRYPT="false"
                 fi
             fi
@@ -301,11 +308,14 @@ if [ "$USE_LETSENCRYPT" = "true" ]; then
         while true; do
             bashio::log.info "Running scheduled certificate renewal check..."
             # Renew if needed and reload Squid if a new cert is deployed
-            certbot renew ${CB_OPTS} \
+            if certbot renew ${CB_OPTS} \
                 --non-interactive \
-                --quiet \
                 --preferred-challenges http \
-                --deploy-hook "squid -k reconfigure -f /tmp/squid.conf"
+                --deploy-hook "echo 'Certificates updated. Reloading Squid...'; squid -k reconfigure -f /tmp/squid.conf"; then
+                bashio::log.info "Certificate renewal check completed successfully."
+            else
+                bashio::log.error "Scheduled certificate renewal check failed! Check /data/letsencrypt/logs for details."
+            fi
             
             # Wait 12 hours between checks
             sleep 43200

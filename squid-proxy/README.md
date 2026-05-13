@@ -39,6 +39,13 @@ This add-on implements **minimal access principle** - it runs with only the esse
 4. **Start** the add-on.
 5. Click **Open Web UI** to monitor your traffic in real-time.
 
+### Let's Encrypt (HTTPS Mode)
+
+To use Let's Encrypt, ensure the following:
+1. Your `proxy_domain` is a valid FQDN (e.g., `proxy.yourdomain.com`).
+2. **IMPORTANT**: Port **80** must be forwarded on your router to your Home Assistant instance. Let's Encrypt requires this for the HTTP-01 challenge.
+3. You have provided a valid `letsencrypt_email`.
+
 ## Connection Summary
 
 | Port | Type | Auth Required | Description |
