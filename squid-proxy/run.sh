@@ -2,7 +2,9 @@
 
 echo "Starting Squid Proxy Add-on..."
 
-# 1. SSL Management (For HTTPS Proxy)
+# Core Configuration
+DEBUG_MODE=$(bashio::config 'debug')
+ENABLE_HTTP=$(bashio::config 'enable_http')
 ENABLE_HTTPS=$(bashio::config 'enable_https')
 USE_LETSENCRYPT=$(bashio::config 'use_letsencrypt')
 LE_EMAIL=$(bashio::config 'letsencrypt_email')

@@ -1,5 +1,5 @@
 name: "Squid Proxy"
-version: "1.1.0"
+version: "1.1.1"
 slug: "squid_proxy"
 description: "High-performance forward proxy with HTTPS-to-HTTPS (Secure Proxy) support and TLS-stealth"
 url: "https://github.com/Nwus9XWK5UTy/homeassistant"

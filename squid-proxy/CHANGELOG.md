@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.1
+- **Fix**: Restored missing `DEBUG_MODE` variable initialization to resolve startup crash.
+
 ## 1.1.0
 - **Feature**: Implemented conditional logging; verbose/debug logs are now suppressed unless the `debug` flag is enabled.
 - **Improved**: Consolidated and cleaned up the core startup logic for better performance.
