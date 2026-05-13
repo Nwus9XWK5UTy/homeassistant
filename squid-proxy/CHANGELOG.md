@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0
+- **Feature**: Implemented conditional logging; verbose/debug logs are now suppressed unless the `debug` flag is enabled.
+- **Improved**: Consolidated and cleaned up the core startup logic for better performance.
+
 ## 1.0.9
 - **Improved**: Switched to Pip-installed Certbot to ensure the add-on runs the absolute latest version available.
 
