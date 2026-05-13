@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.8
+- **Fix**: Disabled Certbot's random sleep on renewal, which was causing the add-on to hang and be killed by the Home Assistant watchdog.
+
 ## 1.0.7
 - **Fix**: Removed blocking renewal check at startup to prevent add-on hangs.
 - **Improved**: Background renewal monitor now uses verbose logging for better debugging.

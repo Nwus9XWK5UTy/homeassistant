@@ -308,6 +308,7 @@ if [ "$USE_LETSENCRYPT" = "true" ]; then
             # Renew if needed and reload Squid if a new cert is deployed
             if certbot renew ${CB_OPTS} \
                 --non-interactive \
+                --no-random-sleep-on-renew \
                 --verbose \
                 --preferred-challenges http \
                 --deploy-hook "echo 'Certificates updated. Reloading Squid...'; squid -k reconfigure -f /tmp/squid.conf"; then
